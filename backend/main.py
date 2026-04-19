@@ -34,25 +34,29 @@ app.add_middleware(
 
 # ---------- BAN (adresse geocoding) -----------------------------------------
 
-async def ban_search(q: str, limit: int = 5) -> list[dict]:
-    """Autocomplete + geocode via the Base Adresse Nationale. Paris only."""
+PARIS_CITYCODE = "75056"  # Paris commune INSEE code — restricts BAN to intra-muros
+
+
+async def ban_search(q: str, limit: int = 5, autocomplete: bool = True) -> list[dict]:
+    """Geocode via the Base Adresse Nationale, restricted to Paris.
+
+    ``autocomplete=True`` is the fuzzy mode used by the typeahead: BAN returns
+    partial prefix matches with lower scores. Set to ``False`` for strict
+    matching on final lookups.
+    """
     async with httpx.AsyncClient(timeout=8.0) as client:
         r = await client.get(
             f"{BAN_BASE}/search/",
             params={
                 "q": q,
                 "limit": limit,
-                "autocomplete": 1,
+                "autocomplete": 1 if autocomplete else 0,
                 "type": "housenumber",
+                "citycode": PARIS_CITYCODE,
             },
         )
     r.raise_for_status()
-    features = r.json().get("features", [])
-    # Keep Paris only (postcode 75xxx)
-    return [
-        f for f in features
-        if (f.get("properties", {}).get("postcode", "") or "").startswith("75")
-    ]
+    return r.json().get("features", [])
 
 
 def ban_feature_to_suggestion(f: dict) -> dict:
@@ -171,18 +175,40 @@ async def health():
 @app.get("/api/search")
 async def search(q: str = Query(..., min_length=2), limit: int = 5):
     """Autocomplete — returns Paris addresses matching q."""
-    features = await ban_search(q, limit=limit)
+    features = await ban_search(q, limit=limit, autocomplete=True)
     return {"suggestions": [ban_feature_to_suggestion(f) for f in features]}
+
+
+# Minimum BAN score to accept a result for the final lookup. BAN returns a
+# score in [0, 1]; below 0.55 the match is too fuzzy (typos and partial
+# queries can otherwise return popular-but-unrelated streets like Rue Lecourbe).
+LOOKUP_MIN_SCORE = 0.55
 
 
 @app.get("/api/lookup")
 async def lookup(q: str = Query(..., min_length=2)):
     """Full lookup: address -> year + era + context + reliability."""
-    features = await ban_search(q, limit=1)
+    # Strict match first (autocomplete=0). If that fails, fall back to fuzzy
+    # with a score guard so we don't silently swap the user's address.
+    features = await ban_search(q, limit=1, autocomplete=False)
+    if not features:
+        features = await ban_search(q, limit=1, autocomplete=True)
+
     if not features:
         raise HTTPException(404, detail="Adresse introuvable à Paris.")
 
-    sugg = ban_feature_to_suggestion(features[0])
+    top = features[0]
+    score = top.get("properties", {}).get("score", 0) or 0
+    if score < LOOKUP_MIN_SCORE:
+        raise HTTPException(
+            404,
+            detail=(
+                "Adresse trop imprécise. Essayez le format complet : "
+                "« 12 rue de l'Odéon 75006 »."
+            ),
+        )
+
+    sugg = ban_feature_to_suggestion(top)
 
     bdnb = await bdnb_building_from_ban_id(sugg["ban_id"])
     year = bdnb["year"] if bdnb else None

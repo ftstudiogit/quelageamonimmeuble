@@ -101,6 +101,9 @@ function SearchBar({ onSubmit, autoFocus = false }) {
   const inputRef = useRef(null);
   const wrapRef = useRef(null);
   const debounceRef = useRef(null);
+  // Monotonic counter so that a slow earlier fetch doesn't overwrite a
+  // later, more relevant one (race condition on debounced autocomplete).
+  const requestSeqRef = useRef(0);
 
   useEffect(() => {
     if (autoFocus && inputRef.current) inputRef.current.focus();
@@ -122,7 +125,10 @@ function SearchBar({ onSubmit, autoFocus = false }) {
       return;
     }
     debounceRef.current = setTimeout(async () => {
+      const mySeq = ++requestSeqRef.current;
       const s = await apiSearch(value.trim());
+      // Ignore if a newer request has been fired in the meantime.
+      if (mySeq !== requestSeqRef.current) return;
       setSuggestions(s);
     }, 180);
     return () => clearTimeout(debounceRef.current);
