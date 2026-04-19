@@ -51,6 +51,16 @@ async function apiSearch(q) {
   }
 }
 
+async function apiStats() {
+  try {
+    const r = await fetch(`${API_BASE}/api/stats`, { cache: 'no-store' });
+    if (!r.ok) return null;
+    return r.json();
+  } catch (e) {
+    return null;
+  }
+}
+
 async function apiLookup(q) {
   let r;
   try {
@@ -87,7 +97,6 @@ function Masthead({ onLogoClick }) {
   return (
     <header className="masthead">
       <Logo onClick={onLogoClick} />
-      <div className="masthead-meta">Paris — fichiers fonciers</div>
     </header>
   );
 }
@@ -163,7 +172,8 @@ function SearchBar({ onSubmit, autoFocus = false }) {
         </svg>
         <input
           ref={inputRef}
-          type="text"
+          type="search"
+          name="q"
           placeholder="Une adresse parisienne…"
           value={value}
           onChange={(e) => { setValue(e.target.value); setOpen(true); setFocusedIdx(-1); }}
@@ -171,6 +181,12 @@ function SearchBar({ onSubmit, autoFocus = false }) {
           onKeyDown={handleKeyDown}
           autoComplete="off"
           spellCheck="false"
+          data-lpignore="true"
+          data-1p-ignore="true"
+          data-bwignore="true"
+          data-form-type="other"
+          aria-autocomplete="list"
+          role="combobox"
         />
         <button
           className={`search-submit ${value ? 'active' : ''}`}
@@ -210,10 +226,9 @@ const EXAMPLES = [
   '34 rue du Faubourg Saint-Antoine 75012 Paris',
 ];
 
-function Landing({ onSubmit }) {
+function Landing({ onSubmit, stats }) {
   return (
     <main className="landing">
-      <div className="landing-eyebrow">N° 01 — Découvrir</div>
       <h1>
         Votre immeuble<br />a quel <em>âge</em> ?
       </h1>
@@ -231,6 +246,33 @@ function Landing({ onSubmit }) {
           </button>
         ))}
       </div>
+
+      {stats && stats.total_lookups > 0 && (
+        <div className="counter">
+          Déjà <strong>{stats.total_lookups.toLocaleString('fr-FR')}</strong>{' '}
+          {stats.total_lookups > 1 ? 'adresses testées' : 'adresse testée'}
+        </div>
+      )}
+
+      <section className="pitch">
+        <h2 className="pitch-title">À quoi ça sert ?</h2>
+        <p>
+          L'année de construction d'un immeuble est demandée dans de nombreuses
+          démarches : <strong>encadrement des loyers à Paris</strong> (le loyer
+          de référence dépend de l'époque), <strong>diagnostics obligatoires</strong>{' '}
+          avant vente ou location (plomb avant 1949, amiante avant 1997),
+          <strong> calcul du DPE</strong>, éligibilité aux{' '}
+          <strong>aides à la rénovation</strong> (MaPrimeRénov' exige souvent
+          plus de quinze ans), tarification d'<strong>assurance habitation</strong>,{' '}
+          <strong>estimation immobilière</strong>.
+        </p>
+        <p>
+          Le site vous donne la date et quelques repères historiques sur
+          l'époque de construction. Sources : Base de Données Nationale des
+          Bâtiments (CSTB, fichiers fonciers DGFiP), Base Adresse Nationale,
+          Wikipédia.
+        </p>
+      </section>
     </main>
   );
 }
@@ -356,12 +398,22 @@ function Footer() {
         <span className="sep">·</span>
         <span style={{ color: 'var(--ink-soft)' }}>Wikipédia</span>
       </div>
-      <div>© MMXXVI · Paris</div>
+      <div>
+        Un projet de{' '}
+        <a
+          href="https://www.linkedin.com/in/francoistruong/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="footer-link"
+        >
+          François Truong
+        </a>
+      </div>
     </footer>
   );
 }
 
 Object.assign(window, {
   Landing, Result, Masthead, Footer, SearchBar, Loading, ErrorState,
-  apiLookup, apiSearch,
+  apiLookup, apiSearch, apiStats,
 });

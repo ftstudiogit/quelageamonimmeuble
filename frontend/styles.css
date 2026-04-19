@@ -244,6 +244,57 @@ html, body {
   color: var(--accent);
 }
 
+/* Counter --------------------------------------------------------------- */
+
+.counter {
+  margin-top: 40px;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  text-align: center;
+}
+.counter strong {
+  font-family: 'Fraunces', serif;
+  font-weight: 400;
+  font-style: italic;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--accent);
+  font-size: 16px;
+  margin: 0 2px;
+}
+
+/* Pitch / SEO block ---------------------------------------------------- */
+
+.pitch {
+  margin: 96px auto 0;
+  max-width: 560px;
+  text-align: left;
+  padding-top: 48px;
+  border-top: 1px solid var(--rule-soft);
+}
+.pitch-title {
+  font-family: 'Fraunces', serif;
+  font-weight: 360;
+  font-style: italic;
+  font-size: 22px;
+  margin: 0 0 18px;
+  color: var(--ink);
+  font-variation-settings: "opsz" 144, "SOFT" 40;
+}
+.pitch p {
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--ink-soft);
+  margin: 0 0 14px;
+  text-wrap: pretty;
+}
+.pitch p strong {
+  color: var(--ink);
+  font-weight: 500;
+}
+
 /* Footer --------------------------------------------------------------- */
 
 .footer {
@@ -261,6 +312,16 @@ html, body {
 .footer .sep {
   margin: 0 8px;
   color: var(--rule-soft);
+}
+.footer-link {
+  color: var(--ink-soft);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  transition: color 0.2s;
+}
+.footer-link:hover {
+  color: var(--accent);
 }
 
 /* Result page ---------------------------------------------------------- */

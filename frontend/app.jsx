@@ -8,6 +8,14 @@ function App() {
   const [query, setQuery] = useStateApp('');
   const [current, setCurrent] = useStateApp(null);
   const [errorMsg, setErrorMsg] = useStateApp('');
+  const [stats, setStats] = useStateApp(null);
+
+  const refreshStats = async () => {
+    const s = await window.apiStats();
+    if (s) setStats(s);
+  };
+
+  useEffectApp(() => { refreshStats(); }, []);
 
   const doLookup = async (q) => {
     setQuery(q);
@@ -16,6 +24,7 @@ function App() {
       const result = await window.apiLookup(q);
       setCurrent(result);
       setView('result');
+      refreshStats();
     } catch (err) {
       setErrorMsg(err.message || 'Erreur inattendue.');
       setView('error');
@@ -31,7 +40,7 @@ function App() {
   return (
     <React.Fragment>
       <Masthead onLogoClick={onBack} />
-      {view === 'landing' && <Landing onSubmit={doLookup} />}
+      {view === 'landing' && <Landing onSubmit={doLookup} stats={stats} />}
       {view === 'loading' && <Loading query={query} />}
       {view === 'result' && current && <Result entry={current} onBack={onBack} />}
       {view === 'error' && <ErrorState message={errorMsg} onBack={onBack} />}
