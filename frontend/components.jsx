@@ -6,15 +6,64 @@ const API_BASE = window.__API_BASE__ || 'http://127.0.0.1:8002';
 
 // ----- API client ----------------------------------------------------------
 
+// Render free tier sleeps after 15 min. Kick the API awake on page load so
+// the first real request doesn't have to wait on a cold start.
+(function warmApi() {
+  try {
+    fetch(`${API_BASE}/api/health`, { cache: 'no-store' }).catch(() => {});
+  } catch (e) {}
+})();
+
+async function fetchWithRetry(url, { retries = 3, delayMs = 1200 } = {}) {
+  let lastErr;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const r = await fetch(url, { cache: 'no-store' });
+      // During cold start Render's edge sometimes returns 404 "Not Found"
+      // as text/plain. Retry those silently.
+      const ct = r.headers.get('content-type') || '';
+      if (r.status === 404 && !ct.includes('json')) {
+        lastErr = new Error('cold-start edge 404');
+      } else {
+        return r;
+      }
+    } catch (e) {
+      lastErr = e;
+    }
+    if (attempt < retries) {
+      await new Promise((res) => setTimeout(res, delayMs * (attempt + 1)));
+    }
+  }
+  throw lastErr || new Error('fetch failed');
+}
+
 async function apiSearch(q) {
-  const r = await fetch(`${API_BASE}/api/search?q=${encodeURIComponent(q)}`);
-  if (!r.ok) return [];
-  const data = await r.json();
-  return data.suggestions || [];
+  try {
+    const r = await fetchWithRetry(
+      `${API_BASE}/api/search?q=${encodeURIComponent(q)}`,
+      { retries: 1, delayMs: 400 }
+    );
+    if (!r.ok) return [];
+    const data = await r.json();
+    return data.suggestions || [];
+  } catch (e) {
+    return [];
+  }
 }
 
 async function apiLookup(q) {
-  const r = await fetch(`${API_BASE}/api/lookup?q=${encodeURIComponent(q)}`);
+  let r;
+  try {
+    r = await fetchWithRetry(
+      `${API_BASE}/api/lookup?q=${encodeURIComponent(q)}`
+    );
+  } catch (e) {
+    const err = new Error(
+      "Le service se réveille — réessayez dans quelques secondes."
+    );
+    err.status = 0;
+    throw err;
+  }
   if (!r.ok) {
     const body = await r.json().catch(() => ({}));
     const err = new Error(body.detail || 'Erreur serveur.');
