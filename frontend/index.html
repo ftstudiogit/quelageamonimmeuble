@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quel âge a mon immeuble — L'année de construction de toute adresse parisienne</title>
+  <meta name="description" content="L'année de construction de toute adresse parisienne, et l'histoire qui va avec. Utile pour l'encadrement des loyers, l'assurance, les diagnostics." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..600,30..100;1,9..144,300..600,30..100&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="styles.css" />
+
+  <script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script>
+    // Pick API base from hostname — local dev hits 127.0.0.1:8002,
+    // everything else hits the deployed Render service.
+    window.__API_BASE__ = /^(localhost|127\.0\.0\.1)$/.test(window.location.hostname)
+      ? 'http://127.0.0.1:8002'
+      : 'https://quelageamonimmeuble-api.onrender.com';
+  </script>
+  <script type="text/babel" src="components.jsx"></script>
+  <script type="text/babel" src="app.jsx"></script>
+</body>
+</html>
