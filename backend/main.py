@@ -10,8 +10,6 @@ Data flow:
     -> BDNB API (api-portail.bdnb.io)          : construction year from lat/lon
     -> eras.classify(year)                      : label + architectural context
 """
-import os
-from pathlib import Path
 from typing import Optional
 
 import httpx
@@ -32,31 +30,6 @@ app.add_middleware(
     allow_methods=["GET"],
     allow_headers=["*"],
 )
-
-
-# ---------- Counter (ephemeral on Render free tier) -------------------------
-# File-based atomic counter. Persists for the instance's lifetime; resets
-# on redeploy or infra moves. Good enough for a "déjà X adresses testées"
-# display; upgrade to a real KV if we ever need exact counts.
-
-COUNTER_PATH = Path(os.getenv("COUNTER_PATH", "/tmp/qamai_counter.txt"))
-COUNTER_BASELINE = int(os.getenv("COUNTER_BASELINE", "0"))
-
-
-def _read_counter() -> int:
-    try:
-        return int(COUNTER_PATH.read_text().strip())
-    except (FileNotFoundError, ValueError, OSError):
-        return COUNTER_BASELINE
-
-
-def _increment_counter() -> int:
-    n = _read_counter() + 1
-    try:
-        COUNTER_PATH.write_text(str(n))
-    except OSError:
-        pass
-    return n
 
 
 # ---------- BAN (adresse geocoding) -----------------------------------------
@@ -195,11 +168,6 @@ async def health():
     return {"status": "ok"}
 
 
-@app.get("/api/stats")
-async def stats():
-    return {"total_lookups": _read_counter()}
-
-
 @app.get("/api/search")
 async def search(q: str = Query(..., min_length=2), limit: int = 5):
     """Autocomplete — returns Paris addresses matching q."""
@@ -237,7 +205,6 @@ async def lookup(q: str = Query(..., min_length=2)):
 
     era = classify(int(year))
     facts = await year_facts(int(year), limit=4)
-    _increment_counter()
     return {
         "display": sugg["display"],
         "arrondissement": sugg["arrondissement"],

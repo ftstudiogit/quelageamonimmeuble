@@ -244,27 +244,6 @@ html, body {
   color: var(--accent);
 }
 
-/* Counter --------------------------------------------------------------- */
-
-.counter {
-  margin-top: 40px;
-  font-size: 12px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--ink-faint);
-  text-align: center;
-}
-.counter strong {
-  font-family: 'Fraunces', serif;
-  font-weight: 400;
-  font-style: italic;
-  text-transform: none;
-  letter-spacing: 0;
-  color: var(--accent);
-  font-size: 16px;
-  margin: 0 2px;
-}
-
 /* Pitch / SEO block ---------------------------------------------------- */
 
 .pitch {

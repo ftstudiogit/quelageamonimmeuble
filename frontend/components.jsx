@@ -51,16 +51,6 @@ async function apiSearch(q) {
   }
 }
 
-async function apiStats() {
-  try {
-    const r = await fetch(`${API_BASE}/api/stats`, { cache: 'no-store' });
-    if (!r.ok) return null;
-    return r.json();
-  } catch (e) {
-    return null;
-  }
-}
-
 async function apiLookup(q) {
   let r;
   try {
@@ -226,7 +216,7 @@ const EXAMPLES = [
   '34 rue du Faubourg Saint-Antoine 75012 Paris',
 ];
 
-function Landing({ onSubmit, stats }) {
+function Landing({ onSubmit }) {
   return (
     <main className="landing">
       <h1>
@@ -246,13 +236,6 @@ function Landing({ onSubmit, stats }) {
           </button>
         ))}
       </div>
-
-      {stats && stats.total_lookups > 0 && (
-        <div className="counter">
-          Déjà <strong>{stats.total_lookups.toLocaleString('fr-FR')}</strong>{' '}
-          {stats.total_lookups > 1 ? 'adresses testées' : 'adresse testée'}
-        </div>
-      )}
 
       <section className="pitch">
         <h2 className="pitch-title">À quoi ça sert ?</h2>
@@ -415,5 +398,5 @@ function Footer() {
 
 Object.assign(window, {
   Landing, Result, Masthead, Footer, SearchBar, Loading, ErrorState,
-  apiLookup, apiSearch, apiStats,
+  apiLookup, apiSearch,
 });
