@@ -1,0 +1,23 @@
+name: keep-alive
+
+# Ping the API every 10 minutes to keep Render's free tier from sleeping
+# (it spins down after 15 min of inactivity and takes 60-70s to wake up).
+#
+# GitHub scheduled workflows run at best-effort — they can be delayed by
+# several minutes during peak load, so 10 min is a safe margin under the
+# 15-min sleep threshold.
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:  # allow manual trigger from the Actions tab
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping /api/health
+        run: |
+          curl -fsS --max-time 90 \
+            https://quelageamonimmeuble-api.onrender.com/api/health \
+            | tee /dev/stderr
