@@ -390,7 +390,7 @@ function Footer() {
       <div>
         Un projet de{' '}
         <a
-          href="https://www.linkedin.com/in/francoistruong/"
+          href="https://francoistruong.fr/"
           target="_blank"
           rel="noopener noreferrer"
           className="footer-link"
