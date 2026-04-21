@@ -217,9 +217,9 @@ function SearchBar({ onSubmit, autoFocus = false }) {
 // ----- Landing -------------------------------------------------------------
 
 const EXAMPLES = [
-  '55 rue du Faubourg Saint-Honoré 75008 Paris',
-  "12 rue de l'Odéon 75006 Paris",
-  '34 rue du Faubourg Saint-Antoine 75012 Paris',
+  '14 rue Saint-Maur 75011 Paris',
+  '34 rue Legendre 75017 Paris',
+  '18 rue Bichat 75010 Paris',
 ];
 
 function Landing({ onSubmit }) {
