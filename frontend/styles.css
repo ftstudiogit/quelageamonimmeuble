@@ -381,6 +381,23 @@ html, body {
   justify-content: center;
   animation: fade-up 0.8s 0.65s cubic-bezier(.2,.7,.2,1) both;
 }
+.reliability:has(+ .year-note) {
+  margin-bottom: 14px;
+}
+.year-note {
+  max-width: 480px;
+  margin: 0 auto 56px;
+  padding: 0 16px;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 300;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+  text-align: center;
+  text-wrap: pretty;
+  animation: fade-up 0.8s 0.75s cubic-bezier(.2,.7,.2,1) both;
+}
 .reliability-dot {
   width: 6px;
   height: 6px;

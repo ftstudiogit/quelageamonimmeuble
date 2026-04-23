@@ -128,15 +128,21 @@ async def bdnb_building_from_ban_id(ban_id: str) -> Optional[dict]:
     if r2.status_code != 200 or not r2.json():
         return None
     row = r2.json()[0]
-    try:
-        year = int(row["annee_construction"]) if row.get("annee_construction") else None
-    except (TypeError, ValueError):
-        year = None
-    if year is None:
+
+    def _to_int(v):
+        try:
+            return int(v) if v else None
+        except (TypeError, ValueError):
+            return None
+
+    year_dgfip = _to_int(row.get("annee_construction"))
+    year_dpe = _to_int(row.get("annee_construction_dpe"))
+    if year_dgfip is None and year_dpe is None:
         return None
+
     return {
-        "year": year,
-        "year_dpe": row.get("annee_construction_dpe"),
+        "year_dgfip": year_dgfip,
+        "year_dpe": year_dpe,
         "reliability": reliability_from_bdnb(row.get("fiabilite_cr_adr_niv_1")),
     }
 
@@ -211,9 +217,35 @@ async def lookup(q: str = Query(..., min_length=2)):
     sugg = ban_feature_to_suggestion(top)
 
     bdnb = await bdnb_building_from_ban_id(sugg["ban_id"])
-    year = bdnb["year"] if bdnb else None
-    reliability = bdnb["reliability"] if bdnb else None
-    source = "BDNB"
+    year = None
+    year_note = None
+    reliability = None
+    source = None
+
+    if bdnb:
+        year_dgfip = bdnb["year_dgfip"]
+        year_dpe = bdnb["year_dpe"]
+        reliability = bdnb["reliability"]
+        source = "BDNB"
+
+        # When DPE-declared year is significantly older than the DGFiP year,
+        # the latter almost certainly reflects a fiscal reset after a heavy
+        # reconstruction. Show the older year as the main date (that's what
+        # "how old is my building" usually means) and keep the DGFiP year as
+        # a note about the later works.
+        RECONSTRUCTION_GAP = 20
+        if (
+            year_dpe is not None
+            and year_dgfip is not None
+            and year_dpe <= year_dgfip - RECONSTRUCTION_GAP
+        ):
+            year = year_dpe
+            year_note = (
+                f"Rénovation ou reconstruction déclarée en {year_dgfip} "
+                f"(fichiers fonciers)."
+            )
+        else:
+            year = year_dgfip if year_dgfip is not None else year_dpe
 
     if year is None:
         year = await ademe_year_from_address(sugg["label"])
@@ -240,4 +272,5 @@ async def lookup(q: str = Query(..., min_length=2)):
         "source": source,
         "reliability": reliability,
         "facts": facts,
+        "year_note": year_note,
     }

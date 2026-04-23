@@ -341,6 +341,9 @@ function Result({ entry, onBack }) {
       <YearHero year={entry.year} />
       <div className="era">{entry.era}</div>
       <ReliabilityBadge reliability={entry.reliability} />
+      {entry.year_note && (
+        <div className="year-note">· {entry.year_note}</div>
+      )}
 
       <hr className="hairline" />
 
